@@ -231,6 +231,9 @@ function BigWigsKelThuzad:BigWigs_RecvSync(sync, rest, nick)
 	elseif sync == "KelMindControl" and self.db.profile.mc then
 		self:TriggerEvent("BigWigs_Message", L["mc_warning"], "Urgent")
 		self:TriggerEvent("BigWigs_StartBar", self, L["mc_bar"], 60, "Interface\\Icons\\Inv_Belt_18")
+		if klhtm.isloaded and klhtm.isenabled then
+			klhtm.table.resetraidthreat()
+		end
 	end
 end
 
