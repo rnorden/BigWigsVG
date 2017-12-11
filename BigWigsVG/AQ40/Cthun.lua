@@ -257,9 +257,9 @@ function BigWigsCThun:BigWigs_RecvSync(sync, rest)
 	elseif sync == "CThunFTDead" then
 		self:FleshTentacleDeath()
 	elseif sync == "CThunT1HP" then
-		self:TriggerEvent("BigWigs_SetHPBar", self, L["fleshtentacle1"], 100-rest)
+		self:TriggerEvent("BigWigs_SetHPBar", self, L["fleshtentacle1"], 100-tonumber(rest)*100)
 	elseif sync == "CThunT2HP" then
-		self:TriggerEvent("BigWigs_SetHPBar", self, L["fleshtentacle2"], 100-rest)
+		self:TriggerEvent("BigWigs_SetHPBar", self, L["fleshtentacle2"], 100-tonumber(rest)*100)
 	end
 end
 
@@ -573,7 +573,7 @@ end
 function BigWigsCThun:GetFleshTentacleHealth()    
     --local health = 100
     if UnitName("playertarget") == L["fleshtentacle"] then
-		health = UnitHealth("playertarget")
+		health = UnitHealth("playertarget")/UnitHealthMax("playertarget")
 		--DEFAULT_CHAT_FRAME:AddMessage("FT HP" .. health)
 	else
 		--[[for i = 1, GetNumRaidMembers(), 1 do
