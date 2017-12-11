@@ -24,6 +24,9 @@ local timeP2Tentacle = 30      -- tentacle timers for phase 2
 local timeP2GiantEye = 60	   --Giant Eye timer for phase 2
 local timeP2GiantClaw = 60	   --Giant Claw timer for phase 2
 
+local timeTentacleRape = 0
+local timeGiantEyeRape = 0
+local timeGiantClawRape = 0
 
 local timeWeakened = 45        -- duration of a weaken
 
@@ -34,8 +37,13 @@ local firstWarning = nil
 local target = nil
 local tentacletime = timeP1Tentacle
 
-local fleshTentacle1Health = 100
-local fleshTentacle2Health = 100
+-- inside this module, health properties will be in a range from 0 to 1
+-- once given to Candybars, we will convert it to range 0 to 100
+local fleshTentacle1Health = 1
+local fleshTentacle2Health = 1
+
+-- save the living/dead state of the 1st tentacle to increase update interval on the 2nd
+local fleshTentacle1Dead = false
 
 
 ----------------------------
@@ -128,6 +136,7 @@ BigWigsCThun.toggleoptions = { "rape", -1, "tentacle", "glare", "group", "flesht
 BigWigsCThun.revision = tonumber(string.sub("$Revision: 19014 $", 12, -3))
 
 function BigWigsCThun:OnEnable()
+	SetCVar("CombatDeathLogRange", 80) -- set bigger combat log death range to be sure to get flesh tentacle deaths
 	target = nil
 	cthunstarted = nil
 	firstGlare = nil
@@ -420,7 +429,7 @@ function BigWigsCThun:CThunWeakenedVG()
 	
 	if self.db.profile.fleshtentacle then
 		self:RemoveFleshTentacle()
-		self:ScheduleEvent("bwcthunfleshten", self.SetupFleshTentacle, 45, self )
+		self:ScheduleEvent("bwcthunfleshten", self.SetupFleshTentacle, timeWeakened, self )
 	end
 end
 
@@ -549,6 +558,8 @@ function BigWigsCThun:DarkGlare()
 end
 
 function BigWigsCThun:SetupFleshTentacle()
+	fleshTentacle1Dead = false
+	-- the following values are range 0 to 100 because it's interfacing with Candybars
     self:TriggerEvent("BigWigs_StartHPBar", self, L["fleshtentacle1"], 100)
     self:TriggerEvent("BigWigs_SetHPBar", self, L["fleshtentacle1"], 0)
     self:TriggerEvent("BigWigs_StartHPBar", self, L["fleshtentacle2"], 100)
@@ -558,23 +569,21 @@ function BigWigsCThun:SetupFleshTentacle()
 end
 
 function BigWigsCThun:UpdateFleshTentacle()
-    local health = self:GetFleshTentacleHealth()
-    if health and health <= fleshTentacle1Health then
+	local health = self:GetFleshTentacleHealth()
+	if health and health <= fleshTentacle1Health then
 		fleshTentacle1Health = health
 		self:TriggerEvent("BigWigs_SendSync", "CThunT1HP " .. health)
-		--self:TriggerEvent("BigWigs_SetHPBar", self, L["fleshtentacle1"], 100-fleshTentacle1Health)
-	elseif health then
+	elseif health and health <= fleshTentacle2Health then
 		fleshTentacle2Health = health
 		self:TriggerEvent("BigWigs_SendSync", "CThunT2HP " .. health)
-		--self:TriggerEvent("BigWigs_SetHPBar", self, L["fleshtentacle2"], 100-fleshTentacle2Health)
 	end
 end
 
-function BigWigsCThun:GetFleshTentacleHealth()    
-    --local health = 100
-    if UnitName("playertarget") == L["fleshtentacle"] then
-		health = UnitHealth("playertarget")/UnitHealthMax("playertarget")
-		--DEFAULT_CHAT_FRAME:AddMessage("FT HP" .. health)
+function BigWigsCThun:GetFleshTentacleHealth()
+	local health = 1
+	if UnitName("target") == L["fleshtentacle"] then
+		health = UnitHealth("target")/UnitHealthMax("target")
+		health = self:round(health,2)
 	else
 		--[[for i = 1, GetNumRaidMembers(), 1 do
 			if UnitName("Raid"..i.."target") == L["fleshtentacle"] then
@@ -586,22 +595,32 @@ function BigWigsCThun:GetFleshTentacleHealth()
     
     -- 0 would remove the bar
     if health == 0 then
-        health = 0.1
+        health = 0.001
     end
-    
     return health
 end
 
 function BigWigsCThun:FleshTentacleDeath()
-    fleshTentacle1Health = 0
-    self:TriggerEvent("BigWigs_SetHPBar", self, L["fleshtentacle1"], 99.9)
+	if fleshTentacle1Dead == false then
+		fleshTentacle1Dead = true
+		fleshTentacle1Health = 0
+		self:TriggerEvent("BigWigs_SetHPBar", self, L["fleshtentacle1"], 99.9)
+	else
+		fleshTentacle2Health = 0
+		self:TriggerEvent("BigWigs_SetHPBar", self, L["fleshtentacle2"], 99.9)
+	end
 end
 
 function BigWigsCThun:RemoveFleshTentacle()
-    fleshTentacle1Health = 100
-    fleshTentacle2Health = 100
+    fleshTentacle1Health = 1
+    fleshTentacle2Health = 1
 	self:TriggerEvent("BigWigs_StopHPBar", self, L["fleshtentacle1"])
 	self:TriggerEvent("BigWigs_StopHPBar", self, L["fleshtentacle2"])
 	self:CancelScheduledEvent("bwcthunCheckFleshTentacleHP")
 	self:CancelScheduledEvent("bwcthunfleshten")
+end
+
+function BigWigsCThun:round(num, numDecimalPlaces)
+  local mult = 10^(numDecimalPlaces or 0)
+  return math.floor(num * mult + 0.5) / mult
 end
