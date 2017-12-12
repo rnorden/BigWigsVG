@@ -33,6 +33,10 @@ L:RegisterTranslations("enUS", function() return {
 	frostblast_name = "Frost Blast",
 	frostblast_desc = "Alerts when people get Frost Blasted.",
 
+	frostblastskipwarning_cmd = "frostblastskipwarning",
+	frostblastskipwarning_name = "Frostbolt Skip Bar",
+	frostblastskipwarning_desc = "Displays a warning bar that Frostbolt has been delayed",
+
 	frostbolt_cmd = "frostbolt",
 	frostbolt_name = "Frostbolt Alert",
 	frostbolt_desc = "Alerts about incoming Frostbolts",
@@ -89,6 +93,8 @@ L:RegisterTranslations("enUS", function() return {
 	frostblast_warning = "Frost Blast!",
 	frostblast_soon_message = "Possible Frost Blast in ~5sec!",
 
+	frostblastskip_bar = "DANGER: Frostblast delayed",
+
 	phase2_mcfrostblast_warning = "Possible Frost Blast and Mind Control in ~5sec!",
 	phase2_detonate_warning = "Detonate Mana in ~5sec!",
 	mcfrostblast_bar = "First Frost Blast and MC",
@@ -109,7 +115,7 @@ L:RegisterTranslations("enUS", function() return {
 BigWigsKelThuzad = BigWigs:NewModule(boss)
 BigWigsKelThuzad.zonename = AceLibrary("Babble-Zone-2.2")["Naxxramas"]
 BigWigsKelThuzad.enabletrigger = boss
-BigWigsKelThuzad.toggleoptions = { "frostbolt", "frostboltbar", -1, "frostblast", "fissure", "mc", -1, "detonate", "detonateicon", -1 ,"guardians", -1, "phase", "bosskill" }
+BigWigsKelThuzad.toggleoptions = { "frostbolt", "frostboltbar", -1, "frostblast", "frostblastskipwarning", -1, "fissure", "mc", -1, "detonate", "detonateicon", -1 ,"guardians", -1, "phase", "bosskill" }
 BigWigsKelThuzad.revision = tonumber(string.sub("$Revision: 19013 $", 12, -3))
 
 ------------------------------
@@ -192,6 +198,7 @@ function BigWigsKelThuzad:PhaseTwoStart()
 	--self:TriggerEvent("BigWigs_StartBar", self, L["phase2_bar"], 19)
 	self:TriggerEvent("BigWigs_StartBar", self, L["detonate_possible_bar"], 39, "Interface\\Icons\\Spell_Nature_WispSplode")
 	self:TriggerEvent("BigWigs_StartBar", self, L["mcfrostblast_bar"], 49, "Interface\\Icons\\Spell_Frost_FreezingBreath")
+	if self.db.profile.frostblastskipwarning then self:ScheduleEvent("bwktfbskipcheck", self.FrostBlastSkipCheck, 31, self) end
 	self:ScheduleEvent("P2warn", "BigWigs_Message", 19, L["phase2_warning"], "Important")
 	self:ScheduleEvent("P2Warn1", "BigWigs_Message", 34, L["phase2_detonate_warning"], "Important")
 	self:ScheduleEvent("P2Warn2", "BigWigs_Message", 44, L["phase2_mcfrostblast_warning"], "Important")
@@ -221,6 +228,11 @@ function BigWigsKelThuzad:BigWigs_RecvSync(sync, rest, nick)
 		self:TriggerEvent("BigWigs_Message", L["frostblast_warning"], "Attention")
 		self:ScheduleEvent("bwktfbwarn", "BigWigs_Message", 25, L["frostblast_soon_message"])
 		self:TriggerEvent("BigWigs_StartBar", self, L["frostblast_bar"], 30, "Interface\\Icons\\Spell_Frost_FreezingBreath")
+		if self.db.profile.frostblastskipwarning then
+			self:TriggerEvent("BigWigs_StopBar", self, L["frostblastskip_bar"]) --cancel any skip bars that may be up
+			self:CancelScheduledEvent("bwktfbskipcheck") --cancel skip check from PhaseTwoStart
+			self:ScheduleEvent("bwktfbskipcheck", self.FrostBlastSkipCheck, 31, self) --reschedule skip check
+		end
 	elseif sync == "KelFizzure" and self.db.profile.fissure then
 		self:TriggerEvent("BigWigs_Message", L["fissure_warning"], "Important")
 	elseif sync == "KelFrostbolt" and self.db.profile.frostbolt then
@@ -231,6 +243,12 @@ function BigWigsKelThuzad:BigWigs_RecvSync(sync, rest, nick)
 	elseif sync == "KelMindControl" and self.db.profile.mc then
 		self:TriggerEvent("BigWigs_Message", L["mc_warning"], "Urgent")
 		self:TriggerEvent("BigWigs_StartBar", self, L["mc_bar"], 60, "Interface\\Icons\\Inv_Belt_18")
+	end
+end
+
+function BigWigsKelThuzad:FrostBlastSkipCheck()
+	if (frostBlastTime + 30) < GetTime() then
+		self:TriggerEvent("BigWigs_StartBar", self, L["frostblastskip_bar"], 30, "Interface\\Icons\\Spell_Frost_FreezingBreath")
 	end
 end
 
