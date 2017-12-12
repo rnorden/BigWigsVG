@@ -185,7 +185,7 @@ BigWigs:RegisterChatCommand({"/bwc", "/BigWigsCmd"}, BigWigs.cmdtable)
 BigWigs:RegisterChatCommand({"/bw", "/BigWigs"}, function() waterfall:Open("BigWigs") end)
 waterfall:Register('BigWigs', 'aceOptions',BigWigs.cmdtable, 'title','BigWigs', 'colorR', 0.2, 'colorG', 0.6, 'colorB', 0.2) 
 BigWigs.debugFrame = DEFAULT_CHAT_FRAME
-BigWigs.revision = tonumber(string.sub("$Revision: 19014 $", 12, -3))
+BigWigs.revision = tonumber(string.sub("$Revision: 19015 $", 12, -3))
 
 --------------------------------
 --      Module Prototype      --
