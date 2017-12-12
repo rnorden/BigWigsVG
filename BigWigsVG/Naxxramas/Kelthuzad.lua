@@ -231,9 +231,6 @@ function BigWigsKelThuzad:BigWigs_RecvSync(sync, rest, nick)
 	elseif sync == "KelMindControl" and self.db.profile.mc then
 		self:TriggerEvent("BigWigs_Message", L["mc_warning"], "Urgent")
 		self:TriggerEvent("BigWigs_StartBar", self, L["mc_bar"], 60, "Interface\\Icons\\Inv_Belt_18")
-		if klhtm.isloaded and klhtm.isenabled then
-			klhtm.table.resetraidthreat()
-		end
 	end
 end
 
@@ -255,6 +252,15 @@ function BigWigsKelThuzad:Affliction( msg )
 		if not mcTime or (mcTime + 2) < GetTime() then
 			self:TriggerEvent("BigWigs_SendSync", "KelMindControl")
 			mcTime = GetTime()
+		end
+		local _,_, dplayer, dtype = string.find( msg, L["mc_triggervg"])
+		if dplayer and dtype then
+			if dplayer == L["you"] and dtype == L["are"] then
+				if klhtm.isloaded and klhtm.isenabled then
+					--DEFAULT_CHAT_FRAME:AddMessage("Resetting my threat because I'm afflicted by MC", 1,1,0);
+					klhtm.table.resetraidthreat()
+				end
+			end
 		end
 	end
 end
