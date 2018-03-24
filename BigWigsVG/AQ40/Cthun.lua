@@ -169,8 +169,6 @@ function BigWigsCThun:OnEnable()
 	self:TriggerEvent("BigWigs_ThrottleSync", "CThunP2StartVG", 20)
 	self:TriggerEvent("BigWigs_ThrottleSync", "CThunWeakenedVG", 20)
 	self:TriggerEvent("BigWigs_ThrottleSync", "CThunGEdownVG", 3)
-	self:TriggerEvent("BigWigs_ThrottleSync", "CThunFT1HP", 0.1)
-	self:TriggerEvent("BigWigs_ThrottleSync", "CThunFT2HP", 0.1)
 	self:TriggerEvent("BigWigs_ThrottleSync", "CThunFTDead", 1)
 end
 
@@ -265,9 +263,9 @@ function BigWigsCThun:BigWigs_RecvSync(sync, rest)
 		BigWigsOnScreenIcons:GEyestop()
 	elseif sync == "CThunFTDead" then
 		self:FleshTentacleDeath()
-	elseif sync == "CThunT1HP" then
+	elseif sync == "CThunFT1HP" then
 		self:TriggerEvent("BigWigs_SetHPBar", self, L["fleshtentacle1"], 100-tonumber(rest)*100)
-	elseif sync == "CThunT2HP" then
+	elseif sync == "CThunFT2HP" then
 		self:TriggerEvent("BigWigs_SetHPBar", self, L["fleshtentacle2"], 100-tonumber(rest)*100)
 	end
 end
@@ -569,13 +567,17 @@ function BigWigsCThun:SetupFleshTentacle()
 end
 
 function BigWigsCThun:UpdateFleshTentacle()
+	local tentacleUpdateEvent
 	local health = self:GetFleshTentacleHealth()
 	if health and health <= fleshTentacle1Health then
 		fleshTentacle1Health = health
-		self:TriggerEvent("BigWigs_SendSync", "CThunT1HP " .. health)
+		tentacleUpdateEvent = "CThunFT1HP"
 	elseif health and health <= fleshTentacle2Health then
 		fleshTentacle2Health = health
-		self:TriggerEvent("BigWigs_SendSync", "CThunT2HP " .. health)
+		tentacleUpdateEvent = "CThunFT2HP"
+	end
+	if tentacleUpdateEvent then
+		self:TriggerEvent("BigWigs_SendSync", tentacleUpdateEvent.." "..health)
 	end
 end
 
