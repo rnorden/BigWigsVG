@@ -120,8 +120,8 @@ L:RegisterTranslations("enUS", function() return {
     fleshtentacle_name = "Flesh Tentacle",
 	fleshtentacle_desc = "Healthbars of both Flesh tentacles",
     fleshtentacle = "Flesh Tentacle",
-    fleshtentacle1 = "Flesh Tentacle 1",
-    fleshtentacle2 = "Flesh Tentacle 2",
+    barFleshtentacle1 = "Flesh Tentacle 1",
+    barFleshtentacle2 = "Flesh Tentacle 2",
 
 } end )
 
@@ -264,9 +264,13 @@ function BigWigsCThun:BigWigs_RecvSync(sync, rest)
 	elseif sync == "CThunFTDead" then
 		self:FleshTentacleDeath()
 	elseif sync == "CThunFT1HP" then
-		self:TriggerEvent("BigWigs_SetHPBar", self, L["fleshtentacle1"], 100-tonumber(rest)*100)
+		rest = tonumber(rest)
+		self:TriggerEvent("BigWigs_SetHPBar", self, L["barFleshtentacle1"], 100-rest*100)
+		fleshTentacle1Health = rest
 	elseif sync == "CThunFT2HP" then
-		self:TriggerEvent("BigWigs_SetHPBar", self, L["fleshtentacle2"], 100-tonumber(rest)*100)
+		rest = tonumber(rest)
+		self:TriggerEvent("BigWigs_SetHPBar", self, L["barFleshtentacle2"], 100-rest*100)
+		fleshTentacle2Health = rest
 	end
 end
 
@@ -383,7 +387,7 @@ function BigWigsCThun:CThunWeakenedVG()
 	self:CancelScheduledEvent("bwctgca")
 
 	self:TriggerEvent("BigWigs_StopBar", self, L["barTentacle"])
-	self:TriggerEvent("BigWigs_stopBar", self, L["barNoRape"])
+	self:TriggerEvent("BigWigs_StopBar", self, L["barNoRape"])
 	self:TriggerEvent("BigWigs_StopBar", self, L["barGiantE"])
 	self:TriggerEvent("BigWigs_StopBar", self, L["barGiantC"])
 
@@ -558,10 +562,10 @@ end
 function BigWigsCThun:SetupFleshTentacle()
 	fleshTentacle1Dead = false
 	-- the following values are range 0 to 100 because it's interfacing with Candybars
-    self:TriggerEvent("BigWigs_StartHPBar", self, L["fleshtentacle1"], 100)
-    self:TriggerEvent("BigWigs_SetHPBar", self, L["fleshtentacle1"], 0)
-    self:TriggerEvent("BigWigs_StartHPBar", self, L["fleshtentacle2"], 100)
-    self:TriggerEvent("BigWigs_SetHPBar", self, L["fleshtentacle2"], 0)
+    self:TriggerEvent("BigWigs_StartHPBar", self, L["barFleshtentacle1"], 100)
+    self:TriggerEvent("BigWigs_SetHPBar", self, L["barFleshtentacle1"], 0)
+    self:TriggerEvent("BigWigs_StartHPBar", self, L["barFleshtentacle2"], 100)
+    self:TriggerEvent("BigWigs_SetHPBar", self, L["barFleshtentacle2"], 0)
     
 	self:ScheduleRepeatingEvent("bwcthunCheckFleshTentacleHP", self.UpdateFleshTentacle, 1, self)
 end
@@ -606,18 +610,18 @@ function BigWigsCThun:FleshTentacleDeath()
 	if fleshTentacle1Dead == false then
 		fleshTentacle1Dead = true
 		fleshTentacle1Health = 0
-		self:TriggerEvent("BigWigs_SetHPBar", self, L["fleshtentacle1"], 99.9)
+		self:TriggerEvent("BigWigs_SetHPBar", self, L["barFleshtentacle1"], 99.9)
 	else
 		fleshTentacle2Health = 0
-		self:TriggerEvent("BigWigs_SetHPBar", self, L["fleshtentacle2"], 99.9)
+		self:TriggerEvent("BigWigs_SetHPBar", self, L["barFleshtentacle2"], 99.9)
 	end
 end
 
 function BigWigsCThun:RemoveFleshTentacle()
     fleshTentacle1Health = 1
     fleshTentacle2Health = 1
-	self:TriggerEvent("BigWigs_StopHPBar", self, L["fleshtentacle1"])
-	self:TriggerEvent("BigWigs_StopHPBar", self, L["fleshtentacle2"])
+	self:TriggerEvent("BigWigs_StopHPBar", self, L["barFleshtentacle1"])
+	self:TriggerEvent("BigWigs_StopHPBar", self, L["barFleshtentacle2"])
 	self:CancelScheduledEvent("bwcthunCheckFleshTentacleHP")
 	self:CancelScheduledEvent("bwcthunfleshten")
 end
